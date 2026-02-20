@@ -5,12 +5,12 @@ import { useEffect, useRef, useState } from 'react';
 type Vec = { x: number; y: number };
 type Obstacle = { x: number; y: number; w: number; h: number; vx: number; vy: number };
 
-type GameStatus = 'ready' | 'running' | 'lost';
+type GameStatus = 'running' | 'lost';
 
 const WIDTH = 720;
 const HEIGHT = 480;
-const PLAYER_SIZE = 26;
-const ITEM_SIZE = 16;
+const PLAYER_SIZE = 34;
+const ITEM_SIZE = 24;
 const SPEED = 240;
 const ROUND_TIME_SECONDS = 45;
 
@@ -36,6 +36,61 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 const collidesWithRect = (point: Vec, size: number, rect: Obstacle): boolean =>
   point.x + size > rect.x && point.x < rect.x + rect.w && point.y + size > rect.y && point.y < rect.y + rect.h;
 
+const drawPixelCharacter = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+  const pixel = size / 16;
+  const draw = (dx: number, dy: number, color: string, w = 1, h = 1) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.round(x + dx * pixel), Math.round(y + dy * pixel), Math.ceil(pixel * w), Math.ceil(pixel * h));
+  };
+
+  draw(4, 0, '#0b102b', 8, 1);
+  draw(3, 1, '#0b102b', 10, 1);
+  draw(4, 2, '#0b102b', 9, 1);
+  draw(8, 3, '#0b102b', 5, 1);
+  draw(7, 1, '#1d3b8f', 2, 2);
+
+  draw(6, 3, '#f4bf8d', 5, 3);
+  draw(7, 4, '#7f1d1d', 3, 1);
+
+  draw(5, 6, '#f4bf8d', 1, 2);
+  draw(10, 6, '#f4bf8d', 1, 2);
+  draw(5, 8, '#f8f4eb', 6, 4);
+  draw(4, 8, '#f4bf8d', 1, 4);
+  draw(11, 8, '#f4bf8d', 1, 4);
+
+  draw(6, 9, '#ef4444', 4, 1);
+  draw(6, 10, '#1e3a8a', 4, 1);
+  draw(6, 11, '#1e3a8a', 4, 1);
+
+  draw(5, 12, '#1f2937', 3, 3);
+  draw(8, 12, '#0f172a', 3, 3);
+
+  draw(6, 15, '#f4bf8d', 1, 1);
+  draw(9, 15, '#f4bf8d', 1, 1);
+};
+
+const drawBeerKeg = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+  const kegW = size;
+  const kegH = size * 0.78;
+  const topX = x - kegW / 2;
+  const topY = y - kegH / 2;
+
+  ctx.fillStyle = '#a16207';
+  ctx.fillRect(topX, topY, kegW, kegH);
+
+  ctx.fillStyle = '#6b7280';
+  ctx.fillRect(topX, topY + 2, kegW, 3);
+  ctx.fillRect(topX, topY + kegH - 5, kegW, 3);
+
+  ctx.fillStyle = '#d97706';
+  ctx.fillRect(topX + 3, topY + 6, kegW - 6, kegH - 12);
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(topX + kegW * 0.32, topY + kegH * 0.3, kegW * 0.36, kegH * 0.22);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(topX + kegW * 0.46, topY + kegH * 0.36, kegW * 0.08, kegH * 0.1);
+};
+
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const keysRef = useRef<Set<string>>(new Set());
@@ -49,7 +104,7 @@ export default function GameCanvas() {
 
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME_SECONDS);
-  const [status, setStatus] = useState<GameStatus>('ready');
+  const [status, setStatus] = useState<GameStatus>('running');
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -71,10 +126,7 @@ export default function GameCanvas() {
     }
 
     const item = itemRef.current;
-    ctx.beginPath();
-    ctx.fillStyle = '#f59e0b';
-    ctx.arc(item.x, item.y, ITEM_SIZE / 1.4, 0, Math.PI * 2);
-    ctx.fill();
+    drawBeerKeg(ctx, item.x, item.y, ITEM_SIZE);
 
     ctx.fillStyle = '#ef4444';
     for (const obstacle of obstaclesRef.current) {
@@ -82,8 +134,7 @@ export default function GameCanvas() {
     }
 
     const player = playerRef.current;
-    ctx.fillStyle = '#22d3ee';
-    ctx.fillRect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE);
+    drawPixelCharacter(ctx, player.x, player.y, PLAYER_SIZE);
 
     ctx.fillStyle = '#e2e8f0';
     ctx.font = 'bold 16px sans-serif';
@@ -109,14 +160,9 @@ export default function GameCanvas() {
   };
 
   useEffect(() => {
-    restart();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     const down = (event: KeyboardEvent) => {
       keysRef.current.add(event.key.toLowerCase());
-      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(event.key.toLowerCase())) {
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(event.key.toLowerCase())) {
         event.preventDefault();
       }
     };
@@ -179,7 +225,7 @@ export default function GameCanvas() {
         const item = itemRef.current;
         const playerCenterX = playerRef.current.x + PLAYER_SIZE / 2;
         const playerCenterY = playerRef.current.y + PLAYER_SIZE / 2;
-        if (Math.hypot(playerCenterX - item.x, playerCenterY - item.y) < 20) {
+        if (Math.hypot(playerCenterX - item.x, playerCenterY - item.y) < 22) {
           scoreRef.current += 10;
           setScore(scoreRef.current);
           itemRef.current = randomItem(playerRef.current);
@@ -218,7 +264,7 @@ export default function GameCanvas() {
         <p className="text-sm text-slate-200">
           {status === 'lost'
             ? `Game over! Final score: ${score}.`
-            : `Chapters collected: ${score}. Keep poaching and dodging!`}
+            : `Kegs secured: ${score}. Keep poaching and dodging!`}
         </p>
         <button
           type="button"
@@ -232,3 +278,4 @@ export default function GameCanvas() {
     </div>
   );
 }
+
