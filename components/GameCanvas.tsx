@@ -260,7 +260,7 @@ export default function GameCanvas() {
         <p className="text-sm text-slate-200">
           {status === 'lost'
             ? `Game over! Final score: ${score}.`
-            : `Kegs secured: ${score}. Dodge fast and survive!`}
+            : `Kegs secured: ${score}. Keep poaching and dodging!`}
         </p>
         <button
           type="button"
