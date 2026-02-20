@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 type Vec = { x: number; y: number };
 type Obstacle = { x: number; y: number; w: number; h: number; vx: number; vy: number };
 
-type GameStatus = 'ready' | 'running' | 'lost';
+type GameStatus = 'running' | 'lost';
 
 const WIDTH = 720;
 const HEIGHT = 480;
@@ -100,7 +100,7 @@ export default function GameCanvas() {
 
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME_SECONDS);
-  const [status, setStatus] = useState<GameStatus>('ready');
+  const [status, setStatus] = useState<GameStatus>('running');
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -154,11 +154,6 @@ export default function GameCanvas() {
     setStatus('running');
     lastTimeRef.current = undefined;
   };
-
-  useEffect(() => {
-    restart();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {

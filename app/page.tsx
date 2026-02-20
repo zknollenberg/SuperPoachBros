@@ -13,7 +13,7 @@ export default function HomePage() {
         <ul className="list-inside list-disc space-y-1">
           <li>Move with WASD or Arrow Keys.</li>
           <li>Collect beer kegs to gain +10 points.</li>
-          <li>Avoid the moving red obstacles or you lose instantly.</li>
+          <li>Avoid moving red obstacles or lose instantly.</li>
           <li>Survive and score before the 45-second timer hits zero.</li>
           <li>Click Restart anytime for a fresh run.</li>
         </ul>
