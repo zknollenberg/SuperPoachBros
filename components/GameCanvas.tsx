@@ -5,20 +5,21 @@ import { useEffect, useRef, useState } from 'react';
 type Vec = { x: number; y: number };
 type Obstacle = { x: number; y: number; w: number; h: number; vx: number; vy: number };
 
-type GameStatus = 'running' | 'lost';
+type GameStatus = 'running' | 'lost' | 'won';
 
 const WIDTH = 720;
 const HEIGHT = 480;
 const PLAYER_SIZE = 34;
-const ITEM_SIZE = 24;
+const ITEM_SIZE = 18;
 const SPEED = 240;
-const ROUND_TIME_SECONDS = 45;
+const ROUND_TIME_SECONDS = 55;
+const HOME_ZONE = { x: WIDTH - 120, y: 38, w: 90, h: 70 };
 
 const createObstacles = (): Obstacle[] => [
-  { x: 80, y: 70, w: 90, h: 26, vx: 54, vy: 0 },
-  { x: 480, y: 110, w: 26, h: 110, vx: 0, vy: 74 },
-  { x: 320, y: 330, w: 120, h: 26, vx: -62, vy: 0 },
-  { x: 620, y: 260, w: 26, h: 100, vx: 0, vy: -65 }
+  { x: 90, y: 360, w: 92, h: 22, vx: 126, vy: 0 },
+  { x: 480, y: 322, w: 100, h: 22, vx: -154, vy: 0 },
+  { x: 250, y: 285, w: 82, h: 22, vx: 142, vy: 0 },
+  { x: 560, y: 248, w: 96, h: 22, vx: -118, vy: 0 }
 ];
 
 const randomItem = (player: Vec): Vec => {
@@ -27,7 +28,7 @@ const randomItem = (player: Vec): Vec => {
   do {
     x = Math.random() * (WIDTH - ITEM_SIZE * 2) + ITEM_SIZE;
     y = Math.random() * (HEIGHT - ITEM_SIZE * 2) + ITEM_SIZE;
-  } while (Math.hypot(player.x - x, player.y - y) < 72);
+  } while (Math.hypot(player.x - x, player.y - y) < 72 || y < 130);
   return { x, y };
 };
 
@@ -69,32 +70,17 @@ const drawPixelCharacter = (ctx: CanvasRenderingContext2D, x: number, y: number,
   draw(9, 15, '#f4bf8d', 1, 1);
 };
 
-const drawBeerKeg = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
-  const kegW = size;
-  const kegH = size * 0.78;
-  const topX = x - kegW / 2;
-  const topY = y - kegH / 2;
-
-  ctx.fillStyle = '#a16207';
-  ctx.fillRect(topX, topY, kegW, kegH);
-
-  ctx.fillStyle = '#6b7280';
-  ctx.fillRect(topX, topY + 2, kegW, 3);
-  ctx.fillRect(topX, topY + kegH - 5, kegW, 3);
-
-  ctx.fillStyle = '#d97706';
-  ctx.fillRect(topX + 3, topY + 6, kegW - 6, kegH - 12);
-
-  ctx.fillStyle = '#f8fafc';
-  ctx.fillRect(topX + kegW * 0.32, topY + kegH * 0.3, kegW * 0.36, kegH * 0.22);
-  ctx.fillStyle = '#334155';
-  ctx.fillRect(topX + kegW * 0.46, topY + kegH * 0.36, kegW * 0.08, kegH * 0.1);
+const drawSnack = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+  ctx.fillStyle = '#fef08a';
+  ctx.fillRect(x - size / 2, y - size / 2, size, size);
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(x - size / 4, y - size / 4, size / 2, size / 2);
 };
 
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const keysRef = useRef<Set<string>>(new Set());
-  const playerRef = useRef<Vec>({ x: 80, y: HEIGHT / 2 });
+  const playerRef = useRef<Vec>({ x: 32, y: HEIGHT - 66 });
   const obstaclesRef = useRef<Obstacle[]>(createObstacles());
   const itemRef = useRef<Vec>(randomItem(playerRef.current));
   const frameRef = useRef<number | undefined>(undefined);
@@ -106,6 +92,56 @@ export default function GameCanvas() {
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME_SECONDS);
   const [status, setStatus] = useState<GameStatus>('running');
 
+  const drawMap = (ctx: CanvasRenderingContext2D) => {
+    ctx.fillStyle = '#7ec9ff';
+    ctx.fillRect(0, 0, WIDTH, 120);
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(70, 28, 76, 18);
+    ctx.fillRect(260, 18, 92, 20);
+    ctx.fillRect(490, 26, 108, 20);
+
+    ctx.fillStyle = '#84cc16';
+    ctx.fillRect(0, 120, WIDTH, 124);
+
+    ctx.fillStyle = '#f3f4f6';
+    ctx.fillRect(18, 142, 108, 76);
+    ctx.fillRect(28, 170, 80, 48);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(62, 182, 18, 36);
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(28, 170, 80, 4);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(HOME_ZONE.x, HOME_ZONE.y, HOME_ZONE.w, HOME_ZONE.h);
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(HOME_ZONE.x, HOME_ZONE.y, HOME_ZONE.w, 4);
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(HOME_ZONE.x + 34, HOME_ZONE.y + 31, 22, 39);
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(HOME_ZONE.x + 8, HOME_ZONE.y + 15, 16, 16);
+    ctx.fillRect(HOME_ZONE.x + 66, HOME_ZONE.y + 15, 16, 16);
+
+    ctx.fillStyle = '#6b7280';
+    ctx.fillRect(0, 244, WIDTH, 150);
+    ctx.fillStyle = '#f8fafc';
+    for (let x = 18; x < WIDTH; x += 56) {
+      ctx.fillRect(x, 316, 24, 4);
+      ctx.fillRect(x + 10, 278, 24, 4);
+      ctx.fillRect(x + 4, 354, 24, 4);
+    }
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(0, 394, WIDTH, 86);
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(0, 394, WIDTH, 4);
+
+    ctx.fillStyle = '#22c55e';
+    ctx.fillRect(12, HEIGHT - 62, 128, 10);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(142, HEIGHT - 66, 8, 18);
+  };
+
   const draw = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -113,42 +149,47 @@ export default function GameCanvas() {
     if (!ctx) return;
 
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-    const bg = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-    bg.addColorStop(0, '#0f172a');
-    bg.addColorStop(1, '#1e293b');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-    ctx.fillStyle = '#0b1220';
-    for (let i = 0; i < 9; i++) {
-      ctx.fillRect(0, i * 56 + 16, WIDTH, 2);
-    }
+    drawMap(ctx);
 
     const item = itemRef.current;
-    drawBeerKeg(ctx, item.x, item.y, ITEM_SIZE);
+    drawSnack(ctx, item.x, item.y, ITEM_SIZE);
 
-    ctx.fillStyle = '#ef4444';
     for (const obstacle of obstaclesRef.current) {
+      ctx.fillStyle = '#ef4444';
       ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(obstacle.x + 10, obstacle.y + obstacle.h - 4, 12, 4);
+      ctx.fillRect(obstacle.x + obstacle.w - 22, obstacle.y + obstacle.h - 4, 12, 4);
     }
 
     const player = playerRef.current;
     drawPixelCharacter(ctx, player.x, player.y, PLAYER_SIZE);
 
-    ctx.fillStyle = '#e2e8f0';
+    ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 16px sans-serif';
     ctx.fillText(`Score: ${scoreRef.current}`, 14, 24);
-    ctx.fillText(`Time: ${Math.ceil(timeLeftRef.current)}s`, WIDTH - 105, 24);
+    ctx.fillText(`Time: ${Math.ceil(timeLeftRef.current)}s`, WIDTH - 102, 24);
+
+    ctx.fillStyle = '#14532d';
+    ctx.fillText("Scruffy Murphy's", 14, HEIGHT - 74);
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillText('Home', HOME_ZONE.x + 24, HOME_ZONE.y - 6);
   };
 
   const loseGame = () => {
-    if (status === 'lost') return;
+    if (status !== 'running') return;
     setStatus('lost');
   };
 
+  const winGame = () => {
+    if (status !== 'running') return;
+    setStatus('won');
+    scoreRef.current += 50;
+    setScore(scoreRef.current);
+  };
+
   const restart = () => {
-    playerRef.current = { x: 80, y: HEIGHT / 2 };
+    playerRef.current = { x: 32, y: HEIGHT - 66 };
     obstaclesRef.current = createObstacles();
     itemRef.current = randomItem(playerRef.current);
     scoreRef.current = 0;
@@ -208,11 +249,6 @@ export default function GameCanvas() {
             next.x = clamp(next.x, 0, WIDTH - next.w);
           }
 
-          if (next.y < 0 || next.y + next.h > HEIGHT) {
-            next.vy *= -1;
-            next.y = clamp(next.y, 0, HEIGHT - next.h);
-          }
-
           return next;
         });
 
@@ -229,6 +265,17 @@ export default function GameCanvas() {
           scoreRef.current += 10;
           setScore(scoreRef.current);
           itemRef.current = randomItem(playerRef.current);
+        }
+
+        if (collidesWithRect(playerRef.current, PLAYER_SIZE, {
+          x: HOME_ZONE.x,
+          y: HOME_ZONE.y,
+          w: HOME_ZONE.w,
+          h: HOME_ZONE.h,
+          vx: 0,
+          vy: 0
+        })) {
+          winGame();
         }
 
         timeLeftRef.current = Math.max(0, timeLeftRef.current - delta);
@@ -249,7 +296,6 @@ export default function GameCanvas() {
         cancelAnimationFrame(frameRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   return (
@@ -263,8 +309,10 @@ export default function GameCanvas() {
       <div className="flex w-full items-center justify-between rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-3">
         <p className="text-sm text-slate-200">
           {status === 'lost'
-            ? `Game over! Final score: ${score}.`
-            : `Kegs secured: ${score}. Keep poaching and dodging!`}
+            ? `You got sent back to Scruffy's. Final score: ${score}.`
+            : status === 'won'
+              ? `You made it home! Final score: ${score}.`
+              : `Late-night walk home: grab snacks (+10) and cross safely.`}
         </p>
         <button
           type="button"
@@ -274,7 +322,7 @@ export default function GameCanvas() {
           Restart
         </button>
       </div>
-      <p className="text-xs text-slate-400">Time left: {Math.ceil(timeLeft)}s</p>
+      <p className="text-xs text-slate-400">Make it from Scruffy Murphy's to your house before time runs out.</p>
     </div>
   );
 }

@@ -9,13 +9,13 @@ export default function HomePage() {
       </header>
 
       <section className="w-full rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-sm text-slate-200">
-        <h2 className="mb-2 text-lg font-semibold text-white">How to play</h2>
+        <h2 className="mb-2 text-lg font-semibold text-white">Story Mode: Walk It Off</h2>
         <ul className="list-inside list-disc space-y-1">
-          <li>Move with WASD or Arrow Keys.</li>
-          <li>Collect beer kegs to gain +10 points.</li>
-          <li>Avoid the moving red obstacles or you lose instantly.</li>
-          <li>Survive and score before the 45-second timer hits zero.</li>
-          <li>Click Restart anytime for a fresh run.</li>
+          <li>You start outside Scruffy Murphy&apos;s at the bottom-left of the map.</li>
+          <li>Move with WASD or Arrow Keys through traffic like an old-school arcade crossing game.</li>
+          <li>Collect late-night snacks for +10 points along the way.</li>
+          <li>Avoid moving cars, beat the timer, and reach your house at the top-right to win.</li>
+          <li>Hit Restart to begin a new run.</li>
         </ul>
       </section>
 
