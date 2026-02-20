@@ -6,6 +6,7 @@ export default function HomePage() {
       <header className="space-y-2 text-center">
         <h1 className="text-4xl font-black tracking-tight text-amber-400">SuperPoachBros</h1>
         <p className="text-slate-300">What goes around comes around</p>
+        <p className="text-slate-300">Waco Fraternity Dash</p>
       </header>
 
       <section className="w-full rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-sm text-slate-200">
@@ -13,6 +14,7 @@ export default function HomePage() {
         <ul className="list-inside list-disc space-y-1">
           <li>Move with WASD or Arrow Keys.</li>
           <li>Collect beer kegs to gain +10 points.</li>
+          <li>Collect golden rush cards to gain +10 points.</li>
           <li>Avoid the moving red obstacles or you lose instantly.</li>
           <li>Survive and score before the 45-second timer hits zero.</li>
           <li>Click Restart anytime for a fresh run.</li>

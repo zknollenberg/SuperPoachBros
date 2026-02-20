@@ -11,6 +11,12 @@ const WIDTH = 720;
 const HEIGHT = 480;
 const PLAYER_SIZE = 30;
 const ITEM_SIZE = 24;
+type GameStatus = 'ready' | 'running' | 'lost';
+
+const WIDTH = 720;
+const HEIGHT = 480;
+const PLAYER_SIZE = 26;
+const ITEM_SIZE = 16;
 const SPEED = 240;
 const ROUND_TIME_SECONDS = 45;
 
@@ -101,6 +107,7 @@ export default function GameCanvas() {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME_SECONDS);
   const [status, setStatus] = useState<GameStatus>('running');
+  const [status, setStatus] = useState<GameStatus>('ready');
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -123,6 +130,10 @@ export default function GameCanvas() {
 
     const item = itemRef.current;
     drawBeerKeg(ctx, item.x, item.y, ITEM_SIZE);
+    ctx.beginPath();
+    ctx.fillStyle = '#f59e0b';
+    ctx.arc(item.x, item.y, ITEM_SIZE / 1.4, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.fillStyle = '#ef4444';
     for (const obstacle of obstaclesRef.current) {
@@ -131,6 +142,8 @@ export default function GameCanvas() {
 
     const player = playerRef.current;
     drawPixelCharacter(ctx, player.x, player.y, PLAYER_SIZE);
+    ctx.fillStyle = '#22d3ee';
+    ctx.fillRect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE);
 
     ctx.fillStyle = '#e2e8f0';
     ctx.font = 'bold 16px sans-serif';
@@ -159,6 +172,14 @@ export default function GameCanvas() {
     const down = (event: KeyboardEvent) => {
       keysRef.current.add(event.key.toLowerCase());
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(event.key.toLowerCase())) {
+    restart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const down = (event: KeyboardEvent) => {
+      keysRef.current.add(event.key.toLowerCase());
+      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(event.key.toLowerCase())) {
         event.preventDefault();
       }
     };
@@ -222,6 +243,7 @@ export default function GameCanvas() {
         const playerCenterX = playerRef.current.x + PLAYER_SIZE / 2;
         const playerCenterY = playerRef.current.y + PLAYER_SIZE / 2;
         if (Math.hypot(playerCenterX - item.x, playerCenterY - item.y) < 22) {
+        if (Math.hypot(playerCenterX - item.x, playerCenterY - item.y) < 20) {
           scoreRef.current += 10;
           setScore(scoreRef.current);
           itemRef.current = randomItem(playerRef.current);
@@ -261,6 +283,7 @@ export default function GameCanvas() {
           {status === 'lost'
             ? `Game over! Final score: ${score}.`
             : `Kegs secured: ${score}. Keep poaching and dodging!`}
+            : `Chapters collected: ${score}. Keep poaching and dodging!`}
         </p>
         <button
           type="button"
