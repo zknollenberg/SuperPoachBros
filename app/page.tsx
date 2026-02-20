@@ -5,6 +5,7 @@ export default function HomePage() {
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col items-center gap-6 px-4 py-8">
       <header className="space-y-2 text-center">
         <h1 className="text-4xl font-black tracking-tight text-amber-400">SuperPoachBros</h1>
+        <p className="text-slate-300">What goes around comes around</p>
         <p className="text-slate-300">Waco Fraternity Dash</p>
       </header>
 
@@ -12,6 +13,7 @@ export default function HomePage() {
         <h2 className="mb-2 text-lg font-semibold text-white">How to play</h2>
         <ul className="list-inside list-disc space-y-1">
           <li>Move with WASD or Arrow Keys.</li>
+          <li>Collect beer kegs to gain +10 points.</li>
           <li>Collect golden rush cards to gain +10 points.</li>
           <li>Avoid the moving red obstacles or you lose instantly.</li>
           <li>Survive and score before the 45-second timer hits zero.</li>

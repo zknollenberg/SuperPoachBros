@@ -5,6 +5,12 @@ import { useEffect, useRef, useState } from 'react';
 type Vec = { x: number; y: number };
 type Obstacle = { x: number; y: number; w: number; h: number; vx: number; vy: number };
 
+type GameStatus = 'running' | 'lost';
+
+const WIDTH = 720;
+const HEIGHT = 480;
+const PLAYER_SIZE = 30;
+const ITEM_SIZE = 24;
 type GameStatus = 'ready' | 'running' | 'lost';
 
 const WIDTH = 720;
@@ -36,6 +42,57 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 const collidesWithRect = (point: Vec, size: number, rect: Obstacle): boolean =>
   point.x + size > rect.x && point.x < rect.x + rect.w && point.y + size > rect.y && point.y < rect.y + rect.h;
 
+const drawPixelCharacter = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+  const pixel = size / 10;
+  const draw = (dx: number, dy: number, color: string, w = 1, h = 1) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(x + dx * pixel, y + dy * pixel, pixel * w, pixel * h);
+  };
+
+  draw(3, 0, '#1e3a8a', 4, 1);
+  draw(2, 1, '#1e3a8a', 6, 1);
+  draw(3, 2, '#93c5fd', 4, 1);
+
+  draw(3, 3, '#f4c7a1', 4, 2);
+  draw(3, 4, '#000000', 1, 1);
+  draw(6, 4, '#000000', 1, 1);
+  draw(4, 5, '#ef4444', 2, 1);
+
+  draw(2, 5, '#f4c7a1', 1, 1);
+  draw(7, 5, '#f4c7a1', 1, 1);
+
+  draw(2, 6, '#1d4ed8', 6, 2);
+  draw(2, 8, '#f4c7a1', 1, 1);
+  draw(7, 8, '#f4c7a1', 1, 1);
+
+  draw(3, 8, '#0f172a', 1, 2);
+  draw(6, 8, '#0f172a', 1, 2);
+  draw(2, 9, '#e5e7eb', 2, 1);
+  draw(6, 9, '#e5e7eb', 2, 1);
+};
+
+const drawBeerKeg = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+  const kegW = size;
+  const kegH = size * 0.78;
+  const topX = x - kegW / 2;
+  const topY = y - kegH / 2;
+
+  ctx.fillStyle = '#a16207';
+  ctx.fillRect(topX, topY, kegW, kegH);
+
+  ctx.fillStyle = '#6b7280';
+  ctx.fillRect(topX, topY + 2, kegW, 3);
+  ctx.fillRect(topX, topY + kegH - 5, kegW, 3);
+
+  ctx.fillStyle = '#d97706';
+  ctx.fillRect(topX + 3, topY + 6, kegW - 6, kegH - 12);
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(topX + kegW * 0.32, topY + kegH * 0.3, kegW * 0.36, kegH * 0.22);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(topX + kegW * 0.46, topY + kegH * 0.36, kegW * 0.08, kegH * 0.1);
+};
+
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const keysRef = useRef<Set<string>>(new Set());
@@ -49,6 +106,7 @@ export default function GameCanvas() {
 
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME_SECONDS);
+  const [status, setStatus] = useState<GameStatus>('running');
   const [status, setStatus] = useState<GameStatus>('ready');
 
   const draw = () => {
@@ -71,6 +129,7 @@ export default function GameCanvas() {
     }
 
     const item = itemRef.current;
+    drawBeerKeg(ctx, item.x, item.y, ITEM_SIZE);
     ctx.beginPath();
     ctx.fillStyle = '#f59e0b';
     ctx.arc(item.x, item.y, ITEM_SIZE / 1.4, 0, Math.PI * 2);
@@ -82,6 +141,7 @@ export default function GameCanvas() {
     }
 
     const player = playerRef.current;
+    drawPixelCharacter(ctx, player.x, player.y, PLAYER_SIZE);
     ctx.fillStyle = '#22d3ee';
     ctx.fillRect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE);
 
@@ -109,6 +169,9 @@ export default function GameCanvas() {
   };
 
   useEffect(() => {
+    const down = (event: KeyboardEvent) => {
+      keysRef.current.add(event.key.toLowerCase());
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(event.key.toLowerCase())) {
     restart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -179,6 +242,7 @@ export default function GameCanvas() {
         const item = itemRef.current;
         const playerCenterX = playerRef.current.x + PLAYER_SIZE / 2;
         const playerCenterY = playerRef.current.y + PLAYER_SIZE / 2;
+        if (Math.hypot(playerCenterX - item.x, playerCenterY - item.y) < 22) {
         if (Math.hypot(playerCenterX - item.x, playerCenterY - item.y) < 20) {
           scoreRef.current += 10;
           setScore(scoreRef.current);
@@ -218,6 +282,7 @@ export default function GameCanvas() {
         <p className="text-sm text-slate-200">
           {status === 'lost'
             ? `Game over! Final score: ${score}.`
+            : `Kegs secured: ${score}. Keep poaching and dodging!`}
             : `Chapters collected: ${score}. Keep poaching and dodging!`}
         </p>
         <button
